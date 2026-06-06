@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>10秒チャレンジ</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+
+    <!-- タイトル画面 -->
+    <div id="screen-title" class="screen active">
+      <div class="screen-inner">
+
+        <div class="col-left">
+          <img src="public/af_logo.png" alt="Anniversary Fes Logo" class="logo" />
+        </div>
+
+        <div class="col-right">
+          <img src="public/title_text.png" alt="10秒チャレンジ" class="title-img" />
+          <p class="description">
+            タイマーが見えない状態でスタートを押して、<br />
+            <span class="highlight">ぴったり10秒</span>でストップしよう！
+          </p>
+          <button class="btn-image" id="btn-start" onclick="startGame()">
+            <img src="public/btn_start.png" alt="スタート" onerror="this.style.display='none'; this.parentNode.classList.add('btn-fallback'); this.parentNode.textContent='START'" />
+          </button>
+          <p class="hint">※ タイマーは非表示になります</p>
+        </div>
+
+      </div>
+
+      <!-- デバッグパネル -->
+      <div class="debug-area">
+        <button class="debug-toggle" onclick="toggleDebug()">DEBUG</button>
+        <div id="debug-panel" class="debug-panel" style="display:none">
+          <p class="debug-section-label">ランク・ボタン確認（1〜2回目リザルト）</p>
+          <div class="debug-btns">
+            <button onclick="debugPreview('perfect')">神業！</button>
+            <button onclick="debugPreview('great')">すごい！</button>
+            <button onclick="debugPreview('good')">いいね！</button>
+            <button onclick="debugPreview('normal')">お惜しい！</button>
+            <button onclick="debugPreview('miss')">ドンマイ！</button>
+          </div>
+          <p class="debug-section-label">おつかれ画面確認</p>
+          <div class="debug-btns">
+            <button onclick="debugFinish()">おつかれ画面を表示</button>
+            <button onclick="debugSave()">📸 画像保存テスト</button>
+          </div>
+          <p class="debug-section-label">メッセージ背景色</p>
+          <div class="debug-btns">
+            <button onclick="setMsgBg('grey')">グレー</button>
+            <button onclick="setMsgBg('red')">赤</button>
+          </div>
+          <p class="debug-section-label">裏技モード（STOPボタン切替）</p>
+          <button id="secret-btn" class="debug-secret" onclick="toggleSecret()">OFF</button>
+        </div>
+      </div>
+
+      <div class="deco deco-tl"></div>
+      <div class="deco deco-br"></div>
+    </div>
+
+    <!-- チャレンジ画面 -->
+    <div id="screen-challenge" class="screen">
+      <div class="screen-inner screen-inner--center">
+
+        <div class="challenge-top">
+          <img src="public/af_logo.png" alt="Anniversary Fes Logo" class="logo logo-small" />
+          <p class="stop-hint">10秒だと思ったらストップ！</p>
+        </div>
+
+        <div class="challenge-body">
+          <div class="challenge-area">
+            <p class="challenge-text">感覚を<br>研ぎ澄まして…</p>
+            <div class="pulse-ring"></div>
+            <div class="pulse-dot"></div>
+          </div>
+          <button class="btn-image btn-stop-color" id="btn-stop" onclick="stopGame()">
+            <img src="public/btn_stop.png" alt="ストップ" onerror="this.style.display='none'; this.parentNode.classList.add('btn-fallback'); this.parentNode.textContent='STOP'" />
+          </button>
+        </div>
+
+      </div>
+      <div class="deco deco-tl"></div>
+      <div class="deco deco-br"></div>
+    </div>
+
+    <!-- リザルト画面（1・2回目） -->
+    <div id="screen-result" class="screen">
+      <div class="screen-inner">
+
+        <div class="col-left">
+          <img src="public/af_logo.png" alt="Anniversary Fes Logo" class="logo logo-small" />
+          <div class="result-area">
+            <p class="result-label">あなたの記録</p>
+            <p class="result-time"><span id="result-seconds">0.00</span><span class="result-unit">秒</span></p>
+          </div>
+          <p class="attempt-count" id="attempt-count"></p>
+        </div>
+
+        <div class="col-right col-right--result">
+          <img class="rank-img" id="rank-img" src="" alt="" />
+          <p class="result-message" id="result-message">-</p>
+          <button class="btn-flat" onclick="resetGame()">
+            <img src="public/btn_retry.png" alt="もう一度チャレンジ！" onerror="this.style.display='none'; this.parentNode.classList.add('btn-flat-fallback'); this.parentNode.textContent='もう一度チャレンジ！'" />
+          </button>
+        </div>
+
+      </div>
+      <div class="deco deco-tl"></div>
+      <div class="deco deco-br"></div>
+    </div>
+
+    <!-- おつかれ画面（3回目） -->
+    <div id="screen-finish" class="screen">
+      <div class="screen-inner" id="finish-capture">
+
+        <div class="col-left">
+          <img src="public/af_logo.png" alt="Anniversary Fes Logo" class="logo logo-small" />
+          <div class="finish-results">
+            <p class="finish-results-title">チャレンジ結果</p>
+            <div class="finish-time-list">
+              <div class="finish-time-row">
+                <img class="crown-icon" id="crown-1" src="public/icon_crown.png" alt="" />
+                <span class="finish-time-label">1回目</span>
+                <span class="finish-time-val" id="finish-t1">—</span>
+              </div>
+              <div class="finish-time-row">
+                <img class="crown-icon" id="crown-2" src="public/icon_crown.png" alt="" />
+                <span class="finish-time-label">2回目</span>
+                <span class="finish-time-val" id="finish-t2">—</span>
+              </div>
+              <div class="finish-time-row">
+                <img class="crown-icon" id="crown-3" src="public/icon_crown.png" alt="" />
+                <span class="finish-time-label">3回目</span>
+                <span class="finish-time-val" id="finish-t3">—</span>
+              </div>
+            </div>
+            <div id="qr-container" class="qr-container"></div>
+          </div>
+        </div>
+
+        <div class="col-right col-right--finish">
+          <p class="finish-message">またいつか挑戦してくれ！</p>
+          <button class="btn-flat" onclick="finishGame()">
+            <img src="public/btn_finish.png" alt="おつかれ！" onerror="this.style.display='none'; this.parentNode.classList.add('btn-flat-fallback'); this.parentNode.textContent='おつかれ！'" />
+          </button>
+          <img class="finish-char" src="public/aoyama_bg.png" alt="" />
+        </div>
+
+      </div>
+      <div class="deco deco-tl"></div>
+      <div class="deco deco-br"></div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

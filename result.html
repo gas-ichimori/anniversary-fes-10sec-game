@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>10秒チャレンジ 結果</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;700;900&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --gold: #c9a84c;
+      --gold-light: #e8d08a;
+      --text-dark: #3a3a5c;
+    }
+
+    body {
+      background: #b8d8f0;
+      font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', sans-serif;
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      padding: 20px 16px;
+    }
+
+    /* ===== リザルトカード（縦型）===== */
+    #result-card {
+      width: min(100%, 420px);
+      aspect-ratio: 853 / 1844;
+      position: relative;
+      overflow: hidden;
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.35);
+    }
+
+    .card-bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center top;
+      display: block;
+    }
+
+    /* コンテンツは下部に配置 */
+    .card-inner {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 8% 2%;
+      gap: 4%;
+    }
+
+    .card-logo {
+      width: 70%;
+      max-width: 260px;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 8px rgba(90,158,200,0.4));
+    }
+
+    .card-title {
+      font-size: clamp(12px, 3.5vw, 18px);
+      font-weight: 900;
+      color: var(--gold);
+      letter-spacing: 0.12em;
+      text-align: center;
+    }
+
+    /* タイム一覧 */
+    .times-list {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(5px, 1.5vw, 10px);
+      width: 100%;
+    }
+
+    .time-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.55);
+      border-radius: 10px;
+      padding: clamp(6px, 1.8vw, 12px) clamp(10px, 3vw, 20px);
+      backdrop-filter: blur(6px);
+    }
+
+    .time-row.is-best {
+      background: rgba(201, 168, 76, 0.22);
+      border: 1.5px solid rgba(201, 168, 76, 0.5);
+    }
+
+    .time-label {
+      font-size: clamp(11px, 3vw, 15px);
+      font-weight: 700;
+      color: var(--text-dark);
+      opacity: 0.7;
+    }
+
+    .time-val {
+      font-size: clamp(22px, 6.5vw, 36px);
+      font-weight: 900;
+      color: var(--text-dark);
+      letter-spacing: -0.01em;
+    }
+
+    .time-val.best {
+      color: var(--gold);
+    }
+
+    /* ベストタイム */
+    .best-block {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 14px;
+      padding: clamp(8px, 2.5vw, 16px) clamp(20px, 6vw, 40px);
+      backdrop-filter: blur(6px);
+      width: 80%;
+    }
+
+    .best-label {
+      font-size: clamp(10px, 2.5vw, 14px);
+      color: var(--text-dark);
+      opacity: 0.6;
+      letter-spacing: 0.1em;
+    }
+
+    .best-val {
+      font-size: clamp(32px, 9vw, 56px);
+      font-weight: 900;
+      color: var(--gold);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .best-unit {
+      font-size: clamp(18px, 4.5vw, 28px);
+      font-weight: 700;
+      color: var(--text-dark);
+      opacity: 0.7;
+    }
+
+    .card-tag {
+      font-size: clamp(9px, 2.2vw, 12px);
+      color: rgba(255, 255, 255, 0.7);
+      letter-spacing: 0.05em;
+    }
+
+    .card-copyright {
+      font-size: clamp(9px, 2vw, 11px);
+      color: rgba(255, 255, 255, 0.55);
+      letter-spacing: 0.06em;
+      align-self: flex-end;
+    }
+
+    /* ===== 保存ボタン ===== */
+    #save-btn {
+      background: none;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      display: block;
+      width: min(80%, 320px);
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.12s, filter 0.12s;
+    }
+
+    #save-btn img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: contain;
+    }
+
+    #save-btn:active  { transform: scale(0.95); filter: brightness(0.9); }
+    #save-btn:disabled { opacity: 0.6; }
+
+    .hint-text {
+      font-size: 12px;
+      color: rgba(58,58,92,0.55);
+      text-align: center;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="result-card">
+    <img class="card-bg" src="public/result_aoyama.jpg" alt="" />
+    <div class="card-inner">
+      <div class="times-list">
+        <div class="time-row" id="row-1">
+          <span class="time-label">1回目</span>
+          <span class="time-val" id="t1">—</span>
+        </div>
+        <div class="time-row" id="row-2">
+          <span class="time-label">2回目</span>
+          <span class="time-val" id="t2">—</span>
+        </div>
+        <div class="time-row" id="row-3">
+          <span class="time-label">3回目</span>
+          <span class="time-val" id="t3">—</span>
+        </div>
+      </div>
+      <div class="best-block">
+        <p class="best-label">ベストタイム</p>
+        <p class="best-val"><span id="best-val">—</span><span class="best-unit">秒</span></p>
+      </div>
+      <p class="card-tag">#AnniversaryFes #10秒チャレンジ</p>
+      <p class="card-copyright">© coly</p>
+    </div>
+  </div>
+
+  <button id="save-btn" onclick="saveImage()">
+    <img src="public/btn_save.png" alt="画像を保存する" onerror="this.style.display='none'; this.parentNode.style.cssText='background:linear-gradient(135deg,#5a9ec8,#a8d4ee);color:white;border-radius:50px;padding:14px 44px;font-size:17px;font-weight:700;border:none'" />
+  </button>
+  <p class="hint-text">
+    ボタンを押すと画像が生成されます<br />
+    長押しして「写真に追加」でも保存できます
+  </p>
+
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <script>
+    const params   = new URLSearchParams(location.search);
+    const rawTimes = ['t1','t2','t3'].map(k => parseFloat(params.get(k)));
+    const times    = rawTimes.map(t => isNaN(t) ? null : t);
+
+    const diffs   = times.map(t => t != null ? Math.abs(t - 10) : Infinity);
+    const bestIdx = diffs.indexOf(Math.min(...diffs));
+
+    times.forEach((t, i) => {
+      const valEl = document.getElementById(`t${i+1}`);
+      const rowEl = document.getElementById(`row-${i+1}`);
+      if (t != null) {
+        valEl.textContent = t.toFixed(2) + '秒';
+        if (i === bestIdx) {
+          valEl.classList.add('best');
+          rowEl.classList.add('is-best');
+        }
+      }
+    });
+
+    if (times[bestIdx] != null) {
+      document.getElementById('best-val').textContent = times[bestIdx].toFixed(2);
+    }
+
+    async function saveImage() {
+      const btn = document.getElementById('save-btn');
+      btn.disabled = true;
+      btn.style.opacity = '0.5';
+
+      try {
+        const canvas = await html2canvas(document.getElementById('result-card'), {
+          allowTaint:      true,
+          useCORS:         false,
+          backgroundColor: null,
+          scale:           2,
+          logging:         false,
+        });
+
+        if (navigator.share && navigator.canShare) {
+          canvas.toBlob(async blob => {
+            const file = new File([blob], '10sec_challenge.png', { type: 'image/png' });
+            try {
+              await navigator.share({ files: [file] });
+            } catch {
+              fallbackDownload(canvas);
+            }
+          }, 'image/png');
+        } else {
+          fallbackDownload(canvas);
+        }
+      } catch (e) {
+        console.error(e);
+        alert('画像の生成に失敗しました');
+      } finally {
+        btn.disabled = false;
+        btn.style.opacity = '';
+      }
+    }
+
+    function fallbackDownload(canvas) {
+      const link = document.createElement('a');
+      link.href = canvas.toDataURL('image/png');
+      link.download = '10sec_challenge.png';
+      link.click();
+    }
+  </script>
+</body>
+</html>
