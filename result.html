@@ -224,10 +224,7 @@
   <button id="save-btn" onclick="saveImage()">
     <img src="public/btn_save.png" alt="画像を保存する" onerror="this.style.display='none'; this.parentNode.style.cssText='background:linear-gradient(135deg,#5a9ec8,#a8d4ee);color:white;border-radius:50px;padding:14px 44px;font-size:17px;font-weight:700;border:none'" />
   </button>
-  <p class="hint-text">
-    ボタンを押すと画像が生成されます<br />
-    長押しして「写真に追加」でも保存できます
-  </p>
+  <p class="hint-text">ボタンを押すと画像が生成されます</p>
 
   <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script>
@@ -268,32 +265,53 @@
           logging:         false,
         });
 
-        if (navigator.share && navigator.canShare) {
-          canvas.toBlob(async blob => {
+        const dataUrl = canvas.toDataURL('image/png');
+
+        // ① Web Share API（Android / iOS 対応ブラウザ）
+        if (typeof navigator.share === 'function') {
+          try {
+            const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
             const file = new File([blob], '10sec_challenge.png', { type: 'image/png' });
-            try {
+            if (!navigator.canShare || navigator.canShare({ files: [file] })) {
               await navigator.share({ files: [file] });
-            } catch {
-              fallbackDownload(canvas);
+              return;
             }
-          }, 'image/png');
-        } else {
-          fallbackDownload(canvas);
+          } catch (e) {
+            if (e.name === 'AbortError') return; // ユーザーがキャンセル
+            // 失敗したら次の方法へ
+          }
         }
+
+        // ② iOS Safari フォールバック：新しいタブで画像を開く（長押し保存）
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS) {
+          const w = window.open('', '_blank');
+          if (w) {
+            w.document.write(`<!DOCTYPE html><html><body style="margin:0;background:#000;">
+              <img src="${dataUrl}" style="width:100%;display:block;" />
+              <p style="color:#fff;text-align:center;font-family:sans-serif;padding:12px;font-size:15px;">
+                画像を長押しして「写真に追加」を選んでください
+              </p>
+            </body></html>`);
+          }
+          return;
+        }
+
+        // ③ PC / Android デスクトップ：ダウンロード
+        const link = document.createElement('a');
+        link.href = dataUrl;
+        link.download = '10sec_challenge.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
       } catch (e) {
         console.error(e);
-        alert('画像の生成に失敗しました');
+        alert('画像の生成に失敗しました: ' + e.message);
       } finally {
         btn.disabled = false;
         btn.style.opacity = '';
       }
-    }
-
-    function fallbackDownload(canvas) {
-      const link = document.createElement('a');
-      link.href = canvas.toDataURL('image/png');
-      link.download = '10sec_challenge.png';
-      link.click();
     }
   </script>
 </body>

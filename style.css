@@ -132,7 +132,7 @@ html, body {
 }
 
 .logo-small {
-  width: min(220px, 22vw);
+  width: min(160px, 16vw);
 }
 
 /* ===== タイトル画面 ===== */
